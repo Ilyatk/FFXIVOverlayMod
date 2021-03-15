@@ -1,0 +1,332 @@
+# Config sample
+# Put it in directory <buddy>\Settings\<character name>\OverlayMod.yaml
+
+--- Global tab=2
+All skip=1 # skip=1 - skip command
+    #Skip # same as skip=1 in attributes
+    Title "%NpcId% %objtype%"
+    LineAttack width=0.5 length=20.0 offset=0 color=70000050 point=E0008000
+    Box size=1 color="FFF00000"
+    
+
+Hostile skip=1 
+    Box size=1 color="FFF00000"
+    LineAttack width=0.5 length=10.0 offset=0 color=70000050 point=E0008000
+    Title "%NpcId% %SpellId%"
+    
+Target skip=1
+    #Title "%hppct% %NpcId% %SpellId% "
+    Title "%NpcId% %SpellId% %objtype%"
+    #Box size=1 color="C0F00000"
+    #LineAttack width=0.5 length=10.0 offset=0 color=70000050 point=E0008000
+    
+Self skip=1
+    #Title "s %SpellId% " 
+    #LineAttack width=0.5 length=30.0 offset=0 color=70000050 point=E0008000
+    Spell 16533
+        LineAttack width=0.5 length=25.0 offset=0 color=70000050 point=E0008000
+    Spell 131
+        CircleAttack radius=6 offset=4 color=50000050 point=C0008000
+    Spell 139
+        CircleAttack radius=8 offset=4 color=50000050 point=C0008000
+        #CircleAttack radius=30 offset=-30 color=50000050 point=C0008000
+
+    #LineAttack width=0.5 length=10.0 offset=0 color=70000050 point=E0008000
+    #CircleAttack radius=20 offset=0 color=50000050 point=C0008000
+    #SideAttack width=1.2 length=50.0 offset=0 color=60000050
+    
+  #Box size=1.5 color="FFF0C000"
+  #Title "%pos%"
+  #Title "12" size=10  
+  
+
+
+# Pc = 1,
+# BattleNpc = 2,
+# EventNpc = 3,
+# Treasure = 4,
+# AetheryteObject = 5,
+# GatheringPoint = 6,
+# EventObject = 7,
+# Mount = 8,
+# Minion = 9,
+# Retainer = 10,
+# HousingEventObject = 12
+GameType type=4
+    Title "Bronze chest" color="cd7f32"
+
+GameType type=2 skip=1
+    Title "%NpcId% %name%"
+    Box size=1 color="B0F00000"
+
+GameType type=6 skip=1 # GatheringPoint
+    Title "%NpcId% %name%"
+    Box size=1 color="B00000D0"
+    
+GameType type=1 hide=1 # PC don't show
+#GameType type=2 hide=1 # BattleNpc don't show
+#GameType type=3 hide=1 # EventNpc don't show
+#GameType type=5 hide=1 # AetheryteObject don't show
+#GameType type=6 hide=1 # GatheringPoint don't show
+#GameType type=7 hide=1 # EventObject don't show
+
+GameType type=8 hide=1 # Mount don't show any mount
+GameType type=9 hide=1 # Minion 
+GameType type=10 hide=1 # Retainer don't show
+GameType type=12 hide=1 # HousingEventObject don't show
+
+--- PoTD skip=0
+Npc hide=1 2005037 2010846 2005052 2005129 2010847
+
+Npc 2009507 2007188
+    Title "Exit" #color="add8e6" size=14
+    
+Npc 2009506 2007187
+    Title "Resurrect"
+    
+Npc 2006020 
+    Title "Mimic"
+    
+Npc 2007358 
+    Title "Gold"
+    
+Npc 2007357 
+    Title "Silver"
+    
+Npc 2007542 
+    Title "!"
+    
+Npc 2007543 
+    Title " Banded"
+
+# Land mines
+Npc 2007182 
+    Title "T Land Mine"
+Npc 2007183 
+    Title "T Luring"
+Npc 2007184 
+    Title "T Enervate"
+Npc 2007185 
+    Title "T Impeding"
+Npc 2007186 
+    Title "T 2007186"
+
+Npc 4979 # hippocerf
+    Spell 6332 
+        CircleAttack radius=3.0 offset=0 color=C0C00000 point=C00000C0
+        
+Npc 4978 # coblyn
+    Spell 6331 
+        CircleAttack radius=3.0 offset=0 color=C0C00000 point=C00000C0
+        
+--- `Slice is Right` skip=0
+Npc 2010779 # Gate "The Slise is Right" Circle attack
+    CircleAttack radius=11.0 offset=0 color=C0C00000 point=C0C08000
+    
+Npc 2010778 # Gate "The Slise is Right" Side attack
+    SideAttack width=5.0 length=70.0 offset=0 color=C00000C0
+    
+Npc 2010777 # Gate "The Slise is Right" Slice(frontal?) attack
+    LineAttack width=5.0 length=100.0 offset=90 color=70ffff00 point=E0ffff30
+    
+
+--- `South Front` skip=0
+Self skip=1
+    CircleAttack radius=20 offset=0 color=50000050 point=C0008000
+
+All skip=1
+    Title "%NpcId% %objtype%"
+    LineAttack width=0.5 length=10.0 offset=0 color=30000050 point=30008000
+    #Box size=1 color="FFF00000"
+
+Target skip=0
+    Title "            %NpcId% %SpellId% %objtype%"
+
+# =========== CE ===========
+
+# ---- The Baying of the Hounds
+NPC 9395
+  LineAttack width=3 length=50.0 offset=0 color=90FF0050 point=90FF8000
+
+NPC 9394
+ Title Dog
+ Spell 20541 # Lion breath
+    LineAttack width=3 length=50.0 offset=0 color=30FF0000 point=30FF0000
+ 
+ Spell 20543 # dragoon breath
+    SideAttack width=2.0 length=30.0 offset=00 color=300000C0
+
+# -- Shadow hands
+NPC hide=1 9400
+ Title _Bird
+ 
+NPC hide=1 9390
+ Title _Master
+ 
+NPC hide=1 5478 # maybe summoner pet
+ 
+# -- Final Furlong
+Npc 9405 type=2
+    Title "Spartoi %objtype%"
+ Spell 20127
+    SideAttack width=2.0 length=30.0 offset=90 color=C00000C0
+ Spell 20128
+    SideAttack width=2.0 length=30.0 offset=0 color=C00000C0
+    
+# -- Final Patriot
+Npc 9417 type=2
+    Title "Patriot %objtype%"
+    LineAttack width=0.5 length=5.0 offset=0 color=30000050 point=30008000
+    
+    
+# --- Metal Fox Chaos
+# Absent Ce chain ...
+Npc 9384 # safruns
+    Spell 20934
+        SideAttack width=5.0 length=70.0 offset=0 color=C00000C0
+        SideAttack width=5.0 length=70.0 offset=90 color=C00000C0
+        
+        
+Npc 9424 # Dainslef
+    Title Dainslef
+        
+# ---
+Npc 9400
+    Spell 20174
+        LineAttack width=10 length=20.0 offset=0 color=30000050 point=30008000
+        
+# -- Behemot
+Npc 9427 # boss
+Npc 9428 # dead behemoths
+Npc 108 # dead behemoths
+Npc 2004789 # conus aoe
+    LineAttack width=2.0 length=50.0 offset=0 color=30000050 point=30008000
+
+# ----- CLL ------ 
+# -- First boss
+Npc hide=1 9429 #,"4th Legion predator",0,"4th Legion predators",0,0,1,0,0
+Npc hide=1 9430 #,"4th Legion armored weapon",0,"4th Legion armored weapons",0,0,1,0,0
+Npc hide=1 9431 #,"4th Legion reaper",0,"4th Legion reapers",0,0,1,0,0
+Npc hide=1 9432 #,"4th Legion colossus",0,"4th Legion colossi",0,0,1,0,0
+Npc hide=1 9433 #,"Albeleo the Maleficent",0,"Albeleo the Maleficent",0,1,1,0,1
+Npc hide=1 9434 #,"Albeleo's Hrodvitnir",0,"Albeleo's Hrodvitnir",0,1,1,0,1
+Npc hide=1 9435 #,"4th Legion rearguard",0,"4th Legion rearguards",0,0,1,0,0
+Npc hide=1 9436 #,"Brionac",0,"Brionac",0,0,1,0,1
+#Npc hide=1 9439 #,"4th Legion helldiver",0,"4th Legion helldivers",0,0,1,0,0
+Npc hide=1 9440 #,"tunnel armor",0,"tunnel armors",0,0,1,0,0
+Npc hide=1 9441 #,"castrum gate",0,"castrum gates",0,0,1,0,0
+
+Npc hide=1 2011194 2011263 2011261 2000700 # hz
+
+Npc hide=1 9439 #,"4th Legion helldiver",0,"4th Legion helldivers",0,0,1,0,0
+    Title "       Bottom" # %hppct%"
+    
+Npc hide=0 9436 #,"Brionac",0,"Brionac",0,0,1,0,1
+    Title "Top " #%hppct%" # don't work
+    
+Npc 9437 #,"lightsphere",0,"lightspheres",0,0,1,0,0
+    Title IN
+    CircleAttack radius=4 offset=0 color=3000FF00 point=3000FF00
+    
+Npc 9438 #,"shadowsphere",0,"shadowspheres",0,0,1,0,0
+    Title OUT
+    CircleAttack radius=12 offset=0 color=30FF0050 point=30FF0050
+
+
+
+
+
+# -- Trash and prisoners
+Npc hide=1 2011202 2011203 2011204 2011205 2011206 2011207 2011208 2011209 2011210 2011211 2011212 2011213 2011214 2011215 2011216 2011217 2011218 2011219 # walls
+    Title "Wall"
+    
+Npc hide=1  9366 9371 9372 9373 9367 9543 9370 9608 9607 9374 9369 9368 1398 1399 378 
+Npc hide=1  2002735 2007457
+
+
+Npc 9682
+    Title "Colossus Rubricatus"
+        
+Npc hide=0 9564
+    Title "Scorpion"
+
+Npc hide=0  9609 #,"4th Legion executioner",0,"4th Legion executioners",0,0,1,0,0
+    Title "Prisoner"
+    
+Npc hide=1  9610 #,"castrum centurion",0,"castrum centurions",0,0,1,0,0
+Npc hide=1  9611 #,"imperial soldier",0,"imperial soldier",0,1,1,0,0
+
+Npc hide=0  9612 #,"captured Resistance member",0,"captured Resistance members",0,0,1,0,0
+    Title "1 Prisoner"
+
+
+
+# --------- Adrammelech elemental boss
+Npc hide=1 9442 # adrammelech
+
+Npc 9443 # torrid orb
+ Title "STOP" #Fire
+
+Npc 9444 # frozen orb
+ Title "MOVE" #Ice
+
+Npc 9445 # aqueous orb
+ Title "KNOCKBACK" #Water 
+
+Npc 9446 # charged orb
+ Title "OUT" #Electric
+  
+Npc 9447 # vortical orb
+ Title "IN" #Wind
+
+Npc 9448 # sabulous orb
+ Title "RING" #Earth
+
+
+Npc hide=1 9449 # electric charge
+Npc hide=1 9450 # twister
+#Npc hide=1 9451 # arcane sphere
+ 
+# --------- Last boss Dawon
+Npc hide=0 9452 # Dawon
+    #Spell 20854 #sprey
+    
+    Spell 20856
+        CircleAttack radius=12 offset=0 color=90000050 point=C0008000
+        
+    Spell 20857
+        SideAttack width=14.0 length=70.0 offset=0 color=C00000C0
+        SideAttack width=14.0 length=70.0 offset=90 color=C00000C0
+
+Npc 2011198 #cross
+    Title " - X"
+    #SideAttack width=14.0 length=70.0 offset=0 color=300000C0
+    #SideAttack width=14.0 length=70.0 offset=90 color=300000C0
+    
+Npc 2011197 # Circle
+    Title " - O"
+    CircleAttack radius=12 offset=0 color=90000050 point=C0008000
+
+#Npc Hide=1 9453 # Fire orb
+Npc 9453 # light orb
+    Title "  IN"
+    CircleAttack radius=3 offset=0 color=3000FF00 point=3000FF00
+    
+Npc hide=1 9455 # beetles
+
+Npc hide=1 2011256 # leon portal
+Npc hide=1 9409 # leon outside
+
+# DR --- 
+
+
+#Npc 9854 #- girls
+#    LineAttack width=3 length=50.0 offset=0 color=90900050 point=90008000
+#Npc 9840 # 3 steps
+#    SideAttack width=5.0 length=70.0 offset=0 color=C00000C0
+#    SideAttack width=5.0 length=70.0 offset=90 color=C00000C0
+#Npc 9838 # 2 steps
+#    SideAttack width=5.0 length=70.0 offset=0 color=C00000C0
+#    SideAttack width=5.0 length=70.0 offset=90 color=C00000C0
+#    
+#Npc 9843 # 1 step 
