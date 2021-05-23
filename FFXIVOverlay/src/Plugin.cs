@@ -51,6 +51,8 @@ namespace FFXIVOverlay
         Dictionary<ff14bot.Enums.GameObjectType, ComplexDrawCommand> CustomObjectTypesDrawing;
         Dictionary<uint, ComplexDrawCommand> NpcDrawing;
 
+        List<GatherNode> GatherNodes = new List<GatherNode>();
+
 
         public override void OnPulse()
         {
@@ -199,6 +201,11 @@ namespace FFXIVOverlay
                     AllDrawing.Drawing(ctx, obj);
                 }
             }
+        
+            foreach(GatherNode g in this.GatherNodes)
+            {
+                g.Drawing(ctx, null);
+            }
         }
 
 
@@ -263,6 +270,9 @@ namespace FFXIVOverlay
                     return;
                 case "npc":
                     fillNpcCommand(cmd);
+                    return;
+                case "gather":
+                    fillGatherMap(cmd);
                     return;
             }
 
@@ -378,6 +388,37 @@ namespace FFXIVOverlay
             }
         }
 
+        public void fillGatherMap(YamLikeConfig.Command docCmd)
+        {
+            if (docCmd.SubCommand == null || docCmd.SubCommand.Count == 0)
+            {
+                return;
+            }
+
+            if (!docCmd.has("zone"))
+                return;
+
+            int mapId = 0;
+            if (!docCmd.tryGet("zone", out mapId))
+            {
+                return;
+            }
+
+            GatherNode node = new GatherNode();
+            node.zoneId = mapId;
+
+            foreach (var c in docCmd.SubCommand)
+            {
+                IDrawCommand drawingCmd = CommandDrawingFactory.create(c);
+                if (drawingCmd == null)
+                    continue;
+
+                node.AddDrawItem(drawingCmd);
+            }
+
+            this.GatherNodes.Add(node);
+        }
+
         void resetDrawing()
         {
             this.SelfDrawing = null;
@@ -390,6 +431,7 @@ namespace FFXIVOverlay
 
             this.CustomObjectTypesDrawing = new Dictionary<ff14bot.Enums.GameObjectType, ComplexDrawCommand>();
             this.NpcDrawing = new Dictionary<uint, ComplexDrawCommand>();
+            this.GatherNodes = new List<GatherNode>();
         }
 
     }

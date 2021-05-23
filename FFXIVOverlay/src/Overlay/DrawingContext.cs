@@ -122,6 +122,36 @@ namespace FFXIVOverlay.Overlay
             Device.DrawUserPrimitives(PrimitiveType.TriangleFan, slices, _vertexBuffer);
         }
 
+        public void DrawCircleWithPoint(SlimDX.Vector3 center, float heading, float radius, Color color, Color pointColor)
+        {
+            int slices = 30;
+            var radsPerSlice = (float)(Math.PI * 2 / slices);
+
+            var newCenter = new Vector3(center.X, center.Y, center.Z);
+
+            _vertexBuffer[0] = new ColoredVertex(newCenter, color);
+            _vertexBuffer[1] = new ColoredVertex(newCenter + new Vector3(radius, 0, 0), color);
+
+            for (int i = 0; i < slices; i++)
+            {
+                double h = ((Math.PI * 2) - heading) + (Math.PI / 2);
+                if (h > (Math.PI * 2))
+                    h = h - (Math.PI * 2);
+
+                bool watchAt = (i * radsPerSlice) < h && h < ((i + 1) * radsPerSlice);
+
+                var sine = (float)Math.Sin((i + 1) * radsPerSlice);
+                var cosine = (float)Math.Cos((i + 1) * radsPerSlice);
+
+                _vertexBuffer[2 + i] =
+                    new ColoredVertex(newCenter + new Vector3(cosine * radius, 0, sine * radius),
+                        watchAt ? pointColor.ToArgb() : color.ToArgb());
+            }
+
+            SetDeclaration();
+            Device.DrawUserPrimitives(PrimitiveType.TriangleFan, slices, _vertexBuffer);
+        }
+
         public void DrawAgroLine(Clio.Utilities.Vector3 center, float heading, float width, float height, Color color, Color pointColor)
         {
             var newCenter = new Vector3(center.X, center.Y, center.Z);

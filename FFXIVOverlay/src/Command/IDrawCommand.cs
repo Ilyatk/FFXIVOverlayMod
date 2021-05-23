@@ -21,13 +21,13 @@ namespace FFXIVOverlay.Command
             Commands = new List<IDrawCommand>();
         }
 
-        public void AddDrawItem(IDrawCommand cmd)
+        public virtual void AddDrawItem(IDrawCommand cmd)
         {
             Commands.Add(cmd);
         }
 
         public List<IDrawCommand> Commands { get; internal set; }
-        public void Drawing(DrawingContext ctx, GameObject obj)
+        public virtual void Drawing(DrawingContext ctx, GameObject obj)
         {
             foreach(var c in Commands)
             {

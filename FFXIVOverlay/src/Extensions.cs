@@ -55,5 +55,41 @@ namespace FFXIVOverlay
 
             return defaultValue;
         }
+
+        public static bool TryParse(this String input, out SlimDX.Vector3 result)
+        {
+            result = new SlimDX.Vector3();
+
+            string[] tmplist = input.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (tmplist == null || tmplist.Length != 3)
+            {
+                return false;
+            }
+
+            float tmp;
+            if (!float.TryParse(tmplist[0], NumberStyles.Float, CultureInfo.InvariantCulture, out tmp))
+            {
+                return false;
+            }
+
+            result.X = tmp;
+
+            if (!float.TryParse(tmplist[1], NumberStyles.Float, CultureInfo.InvariantCulture, out tmp))
+            {
+                return false;
+            }
+
+            result.Y = tmp;
+
+            if (!float.TryParse(tmplist[2], NumberStyles.Float, CultureInfo.InvariantCulture, out tmp))
+            {
+                return false;
+            }
+
+            result.Z = tmp;
+
+            return true;
+        }
     }
 }

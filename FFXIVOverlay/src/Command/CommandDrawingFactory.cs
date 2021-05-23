@@ -30,6 +30,13 @@ namespace FFXIVOverlay.Command
                     return createSideAttack(cmd);
                 case "spell":
                     return createSpellFilter(cmd);
+
+                case "hotspots":
+                    return createGatherHotSpotList(cmd);
+
+                case "hotspot":
+                case "<hotspot":
+                    return createGatherHotSpot(cmd);
             }
 
             return null;
@@ -52,7 +59,7 @@ namespace FFXIVOverlay.Command
             };
 
             float sizeAttr = 12;
-            if (float.TryParse(cmd["size"], NumberStyles.Float, CultureInfo.InvariantCulture,  out sizeAttr))
+            if (float.TryParse(cmd["size"], NumberStyles.Float, CultureInfo.InvariantCulture, out sizeAttr))
             {
                 t.FontSize = sizeAttr;
             }
@@ -62,7 +69,7 @@ namespace FFXIVOverlay.Command
 
         static IDrawCommand createBox(YamLikeCommand cmd)
         {
-            OutLineBox box = new OutLineBox{};
+            OutLineBox box = new OutLineBox { };
 
             float sizeAttr = 0;
             if (float.TryParse(cmd["size"], NumberStyles.Float, CultureInfo.InvariantCulture, out sizeAttr))
@@ -90,7 +97,7 @@ namespace FFXIVOverlay.Command
 
             if (cmd.tryGet("length", out tmp))
             {
-                lineAttack.Length= tmp;
+                lineAttack.Length = tmp;
             }
 
             if (cmd.tryGet("offset", out tmp))
@@ -180,7 +187,7 @@ namespace FFXIVOverlay.Command
 
             List<uint> spells = new List<uint>();
 
-            foreach(var q in cmd.UnnamedParams)
+            foreach (var q in cmd.UnnamedParams)
             {
                 uint spellId = 0;
                 if (uint.TryParse(q, out spellId))
@@ -216,5 +223,64 @@ namespace FFXIVOverlay.Command
             return spellFilter;
         }
 
+        static IDrawCommand createGatherHotSpotList(YamLikeCommand cmd)
+        {
+            if (cmd.SubCommand == null || cmd.SubCommand.Count == 0)
+                return null;
+
+            GatherHotspotList hotspotList = new GatherHotspotList();
+
+            if (cmd.Params.ContainsKey("color"))
+            {
+                hotspotList.Color = cmd["color"].ParseColor(hotspotList.Color);
+            }
+
+            foreach (var c in cmd.SubCommand)
+            {
+                IDrawCommand drawingCmd = CommandDrawingFactory.create(c);
+                if (drawingCmd == null)
+                    continue;
+
+                hotspotList.AddDrawItem(drawingCmd);
+            }
+
+            return hotspotList;
+        }
+
+        static IDrawCommand createGatherHotSpot(YamLikeCommand cmd)
+        {
+            if (!cmd.has("XYZ"))
+                return null;
+
+            string xyzString = cmd["XYZ"];
+
+            SlimDX.Vector3 xyz;
+            if (!xyzString.TryParse(out xyz))
+                return null;
+
+            GatherHotspot h = new GatherHotspot();
+            h.XYZ = xyz;
+            if (cmd.has("Radius"))
+            {
+                float tmp;
+                if (cmd.tryGet("Radius", out tmp))
+                {
+                    h.Radius = tmp;
+                }
+            }
+
+            if (cmd.Params.ContainsKey("color"))
+            {
+                h.NodeColor = cmd["color"].ParseColor(h.NodeColor);
+            }
+
+            if (cmd.Params.ContainsKey("rangecolor"))
+            {
+                h.RangeColor = cmd["rangecolor"].ParseColor(h.RangeColor);
+            }
+
+            return h;
+            
+        }
     }
 }

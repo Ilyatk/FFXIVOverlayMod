@@ -86,9 +86,11 @@ namespace FFXIVOverlay.Command
                             {
                                 return string.Empty;
                             }
-
                             return c.SpellCastInfo.Name ?? "";
                         }
+
+                    case "%zoneid%":
+                        return ff14bot.Managers.WorldManager.ZoneId.ToString();
                 }
 
                 return m.Value;

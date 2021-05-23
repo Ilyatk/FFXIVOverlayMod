@@ -146,6 +146,23 @@ namespace YamLikeConfig
 
             return false;
         }
+
+        public bool tryGet(string key, out int value)
+        {
+            value = 0;
+
+            if (!has(key))
+                return false;
+
+            int tmp = 0;
+            if (int.TryParse(this[key], out tmp))
+            {
+                value = tmp;
+                return true;
+            }
+
+            return false;
+        }
     }
 
     public class Document
