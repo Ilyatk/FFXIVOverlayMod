@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -238,9 +239,152 @@ namespace YamLikeConfig
             return index >= 0 && index < UnnamedParams.Count;
         }
     }
+    public class YamLikeLogEventArgs : EventArgs
+    {
+        public string File { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class YamLikeFileReader : IEnumerator, IEnumerable
+    {
+        public event EventHandler<YamLikeLogEventArgs> FileErrorLog;
+        public bool SkipOpenError { get; set; } = true;
+        public bool HasError { get; internal set; } = false;
+        private List<string> Data;
+
+        private void callFileErrorLog(string path, string message)
+        {
+            HasError = true;
+            if (this.FileErrorLog == null)
+                return;
+
+            this.FileErrorLog(this, new YamLikeLogEventArgs { File = path, Message = message });
+        }
+
+        public bool read(string path)
+        {
+            this.HasError = false;
+
+            var openedFiles = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            this.Data = readFile(path, openedFiles);
+
+            return !this.HasError;
+        }
+
+        List<string> readFile(string path, HashSet<string> openedFiles)
+        {
+            if (openedFiles.Contains(path))
+            {
+                callFileErrorLog(path, "Open file loop.");
+                return null;
+            }
+
+            openedFiles.Add(path);
+            List<string> result = new List<string>();
+
+            try
+            {
+                using (StreamReader sr = File.OpenText(path))
+                {
+                    string s;
+                    int line = -1;
+
+                    while ((s = sr.ReadLine()) != null)
+                    {
+                        line++;
+                        if (!s.Trim().StartsWith("---include"))
+                        {
+                            result.Add(s);
+                            continue;
+                        }
+
+                        int prefixSpaceCount = 0;
+                        int prefixTabCount = 0;
+                        string commandName;
+                        Dictionary<string, string> commandParams = null;
+                        List<string> unnamedParams = null;
+
+                        ConfigParser.parseLine(s, out prefixSpaceCount, out prefixTabCount, out commandName, out commandParams, out unnamedParams);
+                        if (string.IsNullOrEmpty(commandName))
+                            continue;
+
+                        if (commandName != "---include")
+                        {
+                            result.Add(s);
+                            continue;
+                        }
+
+                        if (commandParams != null && commandParams.ContainsKey("skip") && commandParams["skip"] == "1")
+                        {
+                            continue;
+                        }
+
+                        if (unnamedParams == null || unnamedParams.Count == 0)
+                        {
+                            callFileErrorLog(path, string.Format("Line: {0} Command `, ---include` error. Missing unnamed param with file path", line));
+                            continue;
+                        }
+
+                        string dir = Path.GetDirectoryName(path);
+                        string newFilePath = Path.GetFullPath(Path.Combine(dir, unnamedParams[0]));
+                        if (!File.Exists(newFilePath))
+                        {
+                            callFileErrorLog(path, string.Format("Line: {0} Command `, ---include` error. File not found. Path: {1}", line, newFilePath));
+                            continue;
+                        }
+
+                        if (openedFiles.Contains(newFilePath))
+                        {
+                            callFileErrorLog(path, string.Format("Line: {0} Command `, ---include` error. Include loop. Path: {1}", line, newFilePath));
+                            return null;
+                        }
+
+                        List<string> lines = readFile(newFilePath, openedFiles);
+
+                        if (lines != null && lines.Count > 0)
+                            result.AddRange(lines);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                callFileErrorLog(path, ex.Message);
+            }
+
+            openedFiles.Remove(path);
+            return result;
+        }
+
+        private int position = -1;
+        public System.Collections.IEnumerator GetEnumerator()
+        {
+            return (IEnumerator)this;
+        }
+
+        public bool MoveNext()
+        {
+            if (this.Data == null)
+                return false;
+
+            position++;
+            return (position < this.Data.Count);
+        }
+
+        public void Reset()
+        {
+            position = -1;
+        }
+
+        public object Current
+        {
+            get { return Data[position]; }
+        }
+    }
 
     public class ConfigParser
     {
+        public event EventHandler<YamLikeLogEventArgs> FileErrorLog;
+
         public ConfigParser()
         {
             this.Result = new List<Document>();
@@ -252,113 +396,115 @@ namespace YamLikeConfig
             Document currentDoc = null;
             Command prevCmd = null;
 
-            using (StreamReader sr = File.OpenText(fileName))
+            YamLikeFileReader reader = new YamLikeFileReader();
+            reader.FileErrorLog += (object sender, YamLikeLogEventArgs e) => { if (this.FileErrorLog != null) this.FileErrorLog(sender, e); };
+            if (!reader.read(fileName))
+                return false;
+
+            foreach (string s in reader)
             {
-                string s;
-                while ((s = sr.ReadLine()) != null)
+                int prefixSpaceCount = 0;
+                int prefixTabCount = 0;
+                string commandName;
+                Dictionary<string, string> commandParams = null;
+                List<string> unnamedParams = null;
+
+                parseLine(s, out prefixSpaceCount, out prefixTabCount, out commandName, out commandParams, out unnamedParams);
+                if (string.IsNullOrEmpty(commandName))
+                    continue;
+
+                if (commandName == "---")
                 {
-                    int prefixSpaceCount = 0;
-                    int prefixTabCount = 0;
-                    string commandName;
-                    Dictionary<string, string> commandParams = null;
-                    List<string> unnamedParams = null;
+                    // StartNewDocument command.
+                    currentDoc = new Document();
+                    currentDoc.UnnamedParams = unnamedParams;
+                    currentDoc.Params = commandParams;
 
-                    parseLine(s, out prefixSpaceCount, out prefixTabCount, out commandName, out commandParams, out unnamedParams);
-                    if (string.IsNullOrEmpty(commandName))
-                        continue;
+                    prevCmd = null;
+                    Result.Add(currentDoc);
 
-
-                    if (commandName == "---")
+                    if (unnamedParams != null && unnamedParams.Count >= 1)
                     {
-                        // StartNewDocument command.
-                        currentDoc = new Document();
-                        currentDoc.UnnamedParams = unnamedParams;
-                        currentDoc.Params = commandParams;
+                        currentDoc.Name = unnamedParams[0];
+                    }
 
-                        prevCmd = null;
-                        Result.Add(currentDoc);
-
-                        if (unnamedParams != null && unnamedParams.Count >= 1)
+                    if (commandParams != null)
+                    {
+                        if (commandParams.ContainsKey("name"))
                         {
-                            currentDoc.Name = unnamedParams[0];
+                            currentDoc.Name = commandParams["name"];
                         }
 
-                        if (commandParams != null)
+                        if (commandParams.ContainsKey("tab"))
                         {
-                            if (commandParams.ContainsKey("name"))
+                            int tabSize = 2;
+                            if (int.TryParse(commandParams["tab"], out tabSize))
                             {
-                                currentDoc.Name = commandParams["name"];
-                            }
-
-                            if (commandParams.ContainsKey("tab"))
-                            {
-                                int tabSize = 2;
-                                if (int.TryParse(commandParams["tab"], out tabSize))
-                                {
-                                    currentDoc.TabSize = tabSize;
-                                }
+                                currentDoc.TabSize = tabSize;
                             }
                         }
-
-                        continue;
                     }
 
-                    if (currentDoc == null)
-                    {
-                        currentDoc = new Document();
-                        Result.Add(currentDoc);
-                    }
-
-                    int currentDepth = prefixSpaceCount + prefixTabCount * currentDoc.TabSize;
-                    Command cmd = new Command
-                    {
-                        Depth = currentDepth,
-                        Name = commandName,
-                        Params = commandParams,
-                        UnnamedParams = unnamedParams
-                    };
-
-                    currentDoc.RawCommands.Add(cmd);
-
-                    if (prevCmd == null)
-                    {
-                        currentDoc.Commands.Add(cmd);
-                        prevCmd = cmd;
-                        continue;
-                    }
-
-                    if (currentDepth > prevCmd.Depth)
-                    {
-                        cmd.Parent = prevCmd;
-                        cmd.NormalDepth = prevCmd.NormalDepth + 1;
-                        prevCmd.AddSubcommand(cmd);
-                        prevCmd = cmd;
-                        continue;
-                    }
-
-                    Command realParent = prevCmd;
-                    while (realParent != null && realParent.Depth >= currentDepth)
-                    {
-                        realParent = realParent.Parent;
-                    }
-
-                    if (realParent == null)
-                    {
-                        currentDoc.Commands.Add(cmd);
-                        prevCmd = cmd;
-                        continue;
-                    }
-
-                    cmd.Parent = realParent;
-                    cmd.NormalDepth = realParent.NormalDepth + 1;
-                    realParent.AddSubcommand(cmd);
-                    prevCmd = cmd;
+                    continue;
                 }
+
+                if (currentDoc == null)
+                {
+                    currentDoc = new Document();
+                    Result.Add(currentDoc);
+                }
+
+                int currentDepth = prefixSpaceCount + prefixTabCount * currentDoc.TabSize;
+                Command cmd = new Command
+                {
+                    Depth = currentDepth,
+                    Name = commandName,
+                    Params = commandParams,
+                    UnnamedParams = unnamedParams
+                };
+
+                currentDoc.RawCommands.Add(cmd);
+
+                if (prevCmd == null)
+                {
+                    currentDoc.Commands.Add(cmd);
+                    prevCmd = cmd;
+                    continue;
+                }
+
+                if (currentDepth > prevCmd.Depth)
+                {
+                    cmd.Parent = prevCmd;
+                    cmd.NormalDepth = prevCmd.NormalDepth + 1;
+                    prevCmd.AddSubcommand(cmd);
+                    prevCmd = cmd;
+                    continue;
+                }
+
+                Command realParent = prevCmd;
+                while (realParent != null && realParent.Depth >= currentDepth)
+                {
+                    realParent = realParent.Parent;
+                }
+
+                if (realParent == null)
+                {
+                    currentDoc.Commands.Add(cmd);
+                    prevCmd = cmd;
+                    continue;
+                }
+
+                cmd.Parent = realParent;
+                cmd.NormalDepth = realParent.NormalDepth + 1;
+                realParent.AddSubcommand(cmd);
+                prevCmd = cmd;
             }
+
+
             return true;
         }
 
-        void internalAddToList(ref List<string> l, string s)
+        static void internalAddToList(ref List<string> l, string s)
         {
             if (l == null)
             {
@@ -368,7 +514,7 @@ namespace YamLikeConfig
             l.Add(s);
         }
 
-        void internalAddToDictionary(ref Dictionary<string, string> d, string k, string v)
+        static void internalAddToDictionary(ref Dictionary<string, string> d, string k, string v)
         {
             if (d == null)
             {
@@ -378,7 +524,7 @@ namespace YamLikeConfig
             d[k] = v;
         }
 
-        void parseLine(string line, out int prefixSpaceCount, out int prefixTabCount, out string commandName, out Dictionary<string, string> commandParams, out List<string> unnamedParams)
+        public static void parseLine(string line, out int prefixSpaceCount, out int prefixTabCount, out string commandName, out Dictionary<string, string> commandParams, out List<string> unnamedParams)
         {
             prefixSpaceCount = 0;
             prefixTabCount = 0;
@@ -568,7 +714,7 @@ namespace YamLikeConfig
 
                     if (endOfLine)
                     {
-                        // bad value, unfinished quoted string ignore parametr
+                        // bad value, unfinished quoted string ignore parameter
                         break;
                     }
 

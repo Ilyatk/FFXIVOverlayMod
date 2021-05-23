@@ -215,13 +215,24 @@ namespace FFXIVOverlay
             this.resetDrawing();
 
             YamLikeConfig.ConfigParser parser = new YamLikeConfig.ConfigParser();
-            parser.parse(configPath);
+
+            parser.FileErrorLog += (sender, e) => {
+                Logging.Write(Colors.Red, string.Format("[{0}] Config error. File {1}, Message: {2}", Name, e.File, e.Message));
+            };
+
+            if (!parser.parse(configPath))
+            {
+                Logging.Write(Colors.Red, string.Format("[{0}] Config error. Can't parse."));
+                return;
+            }
+
             var docs = parser.Result;
             foreach (var doc in docs)
             {
                 parseConfigDocument(doc);
             }
         }
+
         public void parseConfigDocument(YamLikeConfig.Document doc)
         {
             if (doc["skip"] == "1")
