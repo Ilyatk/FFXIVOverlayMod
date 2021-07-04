@@ -21,8 +21,8 @@ namespace FFXIVOverlay
             //  FF010203
             // #010203
             //  010203
-            
-            
+
+
             if (str.Length < 6 || str.Length > 9)
             {
                 return defaultValue;
@@ -90,6 +90,19 @@ namespace FFXIVOverlay
             result.Z = tmp;
 
             return true;
+        }
+    }
+
+    public static class Vector3Extension
+    { 
+        public static string ToXYZString(this SlimDX.Vector3 v)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0:F4}, {1:F4}, {2:F4}", v.X, v.Y, v.Z);
+        }
+
+        public static string ToShortXYZString(this SlimDX.Vector3 v)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0:F0}, {1:F0}, {2:F0}", v.X, v.Y, v.Z);
         }
     }
 }

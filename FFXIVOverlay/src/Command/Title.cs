@@ -1,32 +1,69 @@
 ﻿using ff14bot.Objects;
-using FFXIVOverlay.Overlay;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Vector3 = SlimDX.Vector3;
 using DrawingContext = FFXIVOverlay.Overlay.DrawingContext;
-using System.Windows.Media;
 using System.Text.RegularExpressions;
 using ff14bot;
 using System.Globalization;
 
 namespace FFXIVOverlay.Command
 {
-    class Title : IDrawCommand
+    class Title : DrawItemBase
     {
-        public string Text;
-        public float FontSize = 12;
-        public System.Drawing.Color TextColor = System.Drawing.Color.FromArgb(255, 255, 255, 255);
-
-        public void Drawing(DrawingContext ctx, GameObject obj)
+        class TextCacheState
         {
-            var vecCenter = obj.Location.Convert() + new Vector3(0, 1, 0);
+            public Vector3 Location;
+            public string Text;
+        }
 
+        public Title() : base()
+        {
+        }
+
+        public float FontSize { set { this.R1 = value; } get { return this.R1; } }
+        public System.Drawing.Color TextColor { set { this.C1 = value; } get { return this.C1; } }
+
+        public override object State(DrawingContext ctx, GameObject obj)
+        {
+            return new TextCacheState
+            {
+                Location = CalcLocation(obj),
+                Text = prepareString(obj)
+            };
+        }
+
+        private void internalDraw(DrawingContext ctx, Vector3 loc, string text)
+        {
+            Vector3 newVec = loc + new Vector3(0, 1, 0);
+            ctx.Draw3DText(text, newVec, FontSize);
+        }
+
+        public override void DrawCache(DrawingContext ctx, object state)
+        {
+            TextCacheState drawItemState = state as TextCacheState;
+            if (drawItemState == null)
+                return;
+
+            internalDraw(ctx, drawItemState.Location, drawItemState.Text);
+        }
+
+        public override void Drawing(DrawingContext ctx, GameObject obj)
+        {
             string outString = prepareString(obj);
+            ctx.Draw3DText(outString, CalcLocation(obj), FontSize);
+        }
+        public override bool Init(YamLikeConfig.Command cmd)
+        {
+            if (!base.Init(cmd))
+            {
+                return false;
+            }
 
-            ctx.Draw3DText(outString, vecCenter, FontSize);
+            if (cmd.UnnamedParams != null && cmd.UnnamedParams.Count > 0)
+            {
+                this.Text = cmd[0];
+            }
+
+            return true;
         }
 
         string prepareString(GameObject obj)
@@ -76,7 +113,7 @@ namespace FFXIVOverlay.Command
                             {
                                 return string.Empty;
                             }
-
+                            
                             return string.Format("{0}", c.CastingSpellId);
                         }
 

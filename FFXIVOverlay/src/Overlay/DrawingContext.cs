@@ -92,34 +92,74 @@ namespace FFXIVOverlay.Overlay
             Device.VertexFormat = ColoredVertex.Format;
         }
 
-        public void DrawCircleWithPoint(Clio.Utilities.Vector3 center, float heading, float radius, Color color, Color pointColor)
+        public void DrawDonut(Vector3 center, float inRadius, float outRadius, Color color)
         {
             int slices = 30;
             var radsPerSlice = (float)(Math.PI * 2 / slices);
+            int colorInt = color.ToArgb();
+            // x -> cos
+            // z -> sin
 
-            var newCenter = new Vector3(center.X, center.Y, center.Z);
+            _vertexBuffer[0] = new ColoredVertex(center, colorInt);
+            _vertexBuffer[1] = new ColoredVertex(center, colorInt);
 
-            _vertexBuffer[0] = new ColoredVertex(newCenter, color);
-            _vertexBuffer[1] = new ColoredVertex(newCenter + new Vector3(radius, 0, 0), color);
+            _vertexBuffer[0].Position.X += inRadius;
+            _vertexBuffer[1].Position.X += outRadius;
 
-            for (int i = 0; i < slices; i++)
+            float angle = 0.0f;
+            int vertexIndex = 2;
+            for (int i = 1; i < slices; i++, vertexIndex+=2)
             {
-                double h = ((Math.PI * 2) - heading) + (Math.PI / 2);
-                if (h > (Math.PI * 2))
-                    h = h - (Math.PI * 2);
+                angle += radsPerSlice;
+                var sine = (float)Math.Sin(angle);
+                var cose = (float)Math.Cos(angle);
 
-                bool watchAt = (i * radsPerSlice) < h && h < ((i + 1) * radsPerSlice);
+                _vertexBuffer[vertexIndex] = new ColoredVertex(center.X + cose * inRadius, center.Y, center.Z + sine * inRadius, colorInt);
+                _vertexBuffer[vertexIndex+1] = new ColoredVertex(center.X + cose * outRadius, center.Y, center.Z + sine * outRadius, colorInt);
+            }
 
-                var sine = (float)Math.Sin((i + 1) * radsPerSlice);
-                var cosine = (float)Math.Cos((i + 1) * radsPerSlice);
+            _vertexBuffer[vertexIndex] = _vertexBuffer[0];
+            _vertexBuffer[vertexIndex + 1] = _vertexBuffer[1];
 
-                _vertexBuffer[2 + i] =
-                    new ColoredVertex(newCenter + new Vector3(cosine * radius, 0, sine * radius),
-                        watchAt ? pointColor.ToArgb() : color.ToArgb());
+            SetDeclaration();
+            Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, slices*2, _vertexBuffer);
+        }
+
+        public void DrawSector(Vector3 center, Color color, float radius, float angleGrad, float heading = 0.0f)
+        {
+            int slices = 30;
+            if (angleGrad < 120)
+            {
+                slices = 10;
+            }
+
+            int colorInt = color.ToArgb();
+
+            double h = ((Math.PI * 2) - heading) + (Math.PI / 2);
+            if (h > (Math.PI * 2))
+                h = h - (Math.PI * 2);
+
+            float angle = (float)((angleGrad / 180f) * Math.PI);
+            float angleStep = angle / slices;
+            _vertexBuffer[0] = new ColoredVertex(center, colorInt);
+
+            float currentAngle = -(angle / 2.0f) + (float)h;
+            int vertexIndex = 1;
+            for (int i = 0; i < slices; i++, currentAngle += angleStep, vertexIndex++)
+            {
+                var sine = (float)Math.Sin(currentAngle);
+                var cose = (float)Math.Cos(currentAngle);
+                _vertexBuffer[vertexIndex] = 
+                    new ColoredVertex(center.X + cose * radius, center.Y, center.Z + sine * radius, colorInt);
             }
 
             SetDeclaration();
-            Device.DrawUserPrimitives(PrimitiveType.TriangleFan, slices, _vertexBuffer);
+            Device.DrawUserPrimitives(PrimitiveType.TriangleFan, slices - 1, _vertexBuffer);
+        }
+
+        public void DrawCircleWithPoint(Clio.Utilities.Vector3 center, float heading, float radius, Color color, Color pointColor)
+        {
+            DrawCircleWithPoint(center.Convert(), heading, radius, color, pointColor);
         }
 
         public void DrawCircleWithPoint(SlimDX.Vector3 center, float heading, float radius, Color color, Color pointColor)
@@ -127,24 +167,22 @@ namespace FFXIVOverlay.Overlay
             int slices = 30;
             var radsPerSlice = (float)(Math.PI * 2 / slices);
 
-            var newCenter = new Vector3(center.X, center.Y, center.Z);
+            _vertexBuffer[0] = new ColoredVertex(center, color);
+            _vertexBuffer[1] = new ColoredVertex(center + new Vector3(radius, 0, 0), color);
 
-            _vertexBuffer[0] = new ColoredVertex(newCenter, color);
-            _vertexBuffer[1] = new ColoredVertex(newCenter + new Vector3(radius, 0, 0), color);
+            double h = ((Math.PI * 2) - heading) + (Math.PI / 2);
+            if (h > (Math.PI * 2))
+                h = h - (Math.PI * 2);
 
             for (int i = 0; i < slices; i++)
             {
-                double h = ((Math.PI * 2) - heading) + (Math.PI / 2);
-                if (h > (Math.PI * 2))
-                    h = h - (Math.PI * 2);
-
                 bool watchAt = (i * radsPerSlice) < h && h < ((i + 1) * radsPerSlice);
 
                 var sine = (float)Math.Sin((i + 1) * radsPerSlice);
                 var cosine = (float)Math.Cos((i + 1) * radsPerSlice);
 
                 _vertexBuffer[2 + i] =
-                    new ColoredVertex(newCenter + new Vector3(cosine * radius, 0, sine * radius),
+                    new ColoredVertex(center + new Vector3(cosine * radius, 0, sine * radius),
                         watchAt ? pointColor.ToArgb() : color.ToArgb());
             }
 
@@ -154,11 +192,14 @@ namespace FFXIVOverlay.Overlay
 
         public void DrawAgroLine(Clio.Utilities.Vector3 center, float heading, float width, float height, Color color, Color pointColor)
         {
-            var newCenter = new Vector3(center.X, center.Y, center.Z);
+            DrawAgroLine(center.Convert(), heading, width, height, color, pointColor);
+        }
 
+        public void DrawAgroLine(SlimDX.Vector3 newCenter, float heading, float width, float height, Color color, Color pointColor)
+        {
             float heightBack = width;
 
-            float diag = (float)Math.Sqrt(height * height + (width * width)/4);
+            float diag = (float)Math.Sqrt(height * height + (width * width) / 4);
             float diagBack = (float)Math.Sqrt(heightBack * heightBack + width * width) / 2;
 
             float subangle = (float)Math.Atan2(width / 2, height / 2);
@@ -184,8 +225,33 @@ namespace FFXIVOverlay.Overlay
 
         public void DrawSideAttackAgroLine(Clio.Utilities.Vector3 center, float heading, float width, float height, Color color)
         {
-            var newCenter = new Vector3(center.X, center.Y, center.Z);
+            DrawSideAttackAgroLine(center.Convert(), heading, width, height, color);
+            //var newCenter = new Vector3(center.X, center.Y, center.Z);
 
+            //float diag = (float)Math.Sqrt(height * height + width * width) / 2;
+            //float subangle = (float)Math.Atan2(width / 2, height / 2);
+
+
+            //float h = (float)(((Math.PI * 2) - heading));
+
+            //float r1 = h - subangle;
+            //float r2 = h + subangle + (float)Math.PI;
+            //float r3 = h - subangle + (float)Math.PI;
+            //float r4 = h + subangle;
+
+            //_vertexBuffer[0] = new ColoredVertex(newCenter, color);
+            //_vertexBuffer[1] = new ColoredVertex(newCenter + new Vector3((float)Math.Cos(r1) * diag, 0, (float)Math.Sin(r1) * diag), color);
+            //_vertexBuffer[2] = new ColoredVertex(newCenter + new Vector3((float)Math.Cos(r2) * diag, 0, (float)Math.Sin(r2) * diag), color);
+            //_vertexBuffer[3] = new ColoredVertex(newCenter + new Vector3((float)Math.Cos(r3) * diag, 0, (float)Math.Sin(r3) * diag), color);
+            //_vertexBuffer[4] = new ColoredVertex(newCenter + new Vector3((float)Math.Cos(r4) * diag, 0, (float)Math.Sin(r4) * diag), color);
+            //_vertexBuffer[5] = _vertexBuffer[1];
+
+            //SetDeclaration();
+            //Device.DrawUserPrimitives(PrimitiveType.TriangleFan, 4, _vertexBuffer);
+        }
+
+        public void DrawSideAttackAgroLine(Vector3 newCenter, float heading, float width, float height, Color color)
+        {
             float diag = (float)Math.Sqrt(height * height + width * width) / 2;
             float subangle = (float)Math.Atan2(width / 2, height / 2);
 
@@ -460,6 +526,11 @@ namespace FFXIVOverlay.Overlay
 
         public void DrawCircle(Clio.Utilities.Vector3 center, float radius, Color color)
         {
+            DrawCircle(center.Convert(), radius, color);
+        }
+
+        public void DrawCircle(Vector3 center, float radius, Color color)
+        {
             int slices = 30;
             var radsPerSlice = (float)(Math.PI * 2 / slices);
 
@@ -535,7 +606,7 @@ namespace FFXIVOverlay.Overlay
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct ColoredVertex
+        public unsafe struct ColoredVertex
         {
             public ColoredVertex(Vector3 position, int color)
             {
@@ -545,6 +616,19 @@ namespace FFXIVOverlay.Overlay
 
             public ColoredVertex(Vector3 position, Color color)
                 : this(position, color.ToArgb())
+            {
+            }
+
+            public ColoredVertex(float x, float y, float z, int color)
+            {
+                Position.X = x;
+                Position.Y = y;
+                Position.Z = z;
+                Color = color;
+            }
+
+            public ColoredVertex(float x, float y, float z, Color color)
+                : this(x, y, z, color.ToArgb())
             {
             }
 

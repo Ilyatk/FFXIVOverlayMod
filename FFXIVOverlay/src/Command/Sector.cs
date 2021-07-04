@@ -1,29 +1,30 @@
-﻿using ff14bot.Objects;
+﻿using System.Drawing;
 using Vector3 = SlimDX.Vector3;
 using DrawingContext = FFXIVOverlay.Overlay.DrawingContext;
+using ff14bot.Objects;
 
 namespace FFXIVOverlay.Command
 {
-    public class SideAttack : DrawItemBase
+    public class Sector : DrawItemBase
     {
-        public SideAttack() : base()
+        public Sector() : base()
         {
         }
 
-        public float Width { set { this.R1 = value; } get { return this.R1; } }
-        public float Length { set { this.R2 = value; } get { return this.R2; } }
+        public Color Color { set { this.C1 = value; } get { return this.C1; } }
 
-        public System.Drawing.Color Color = System.Drawing.Color.FromArgb(255, 255, 0, 0);
+        public float Radius { set { this.R1 = value; } get { return this.R1; } }
 
-        private void internalDraw(DrawingContext ctx, Vector3 loc, float heading)
+        private void internalDraw(DrawingContext ctx, Vector3 center, float heading)
         {
-            ctx.DrawSideAttackAgroLine(loc, heading, Width, Length, Color);
+            ctx.DrawSector(center, Color, Radius, Angle, heading);
         }
 
         public override void Drawing(DrawingContext ctx, GameObject obj)
         {
             internalDraw(ctx, CalcLocation(obj), CalcHeading(obj));
         }
+
         public override void internalDrawingCache(DrawingContext ctx, DrawItemState state)
         {
             internalDraw(ctx, state.Center, state.Heading);

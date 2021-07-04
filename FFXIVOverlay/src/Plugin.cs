@@ -53,6 +53,13 @@ namespace FFXIVOverlay
 
         List<GatherNode> GatherNodes = new List<GatherNode>();
 
+        ComplexDrawCommand customPoints = new ComplexDrawCommand();
+
+        DrawCacheManager cacheDrawManager = new DrawCacheManager();
+
+        private int _hotkeyId1 = 0;
+        private int _hotkeyId2 = 0;
+
 
         public override void OnPulse()
         {
@@ -75,13 +82,50 @@ namespace FFXIVOverlay
 
         public override void OnEnabled()
         {
+            this.resetDrawing();
+
             // load Config.
-            string configPath = JsonSettings.GetSettingsFilePath(Core.Me.Name, "OverlayMod.yaml");
+            string configPath;
+            try
+            {
+                configPath = JsonSettings.GetSettingsFilePath(Core.Me.Name, "OverlayMod.yaml");
+            } 
+            catch(Exception)
+            {
+                configPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings", "OverlayMod.yaml");
+            }
+
             loadConfig(configPath);
 
             Task.Factory.StartNew(RunRenderForm, TaskCreationOptions.LongRunning);
+
+            _hotkeyId1 = HotKeyManager.RegisterHotKey(Keys.O, KeyModifiers.Shift | KeyModifiers.Alt);
+            _hotkeyId2 = HotKeyManager.RegisterHotKey(Keys.I, KeyModifiers.Shift | KeyModifiers.Alt);
+            HotKeyManager.HotKeyPressed += HotKeyManager_HotKeyPressed;
         }
 
+        private void HotKeyManager_HotKeyPressed(object sender, HotKeyEventArgs e)
+        {
+            if (e.Key == Keys.O && e.Modifiers == (KeyModifiers.Shift | KeyModifiers.Alt))
+            {
+                // add circle on me
+                CircleAttack f = new CircleAttack();
+                f.FixCenter = true;
+                f.Center = Core.Me.Location.Convert();
+
+                f.HeadingOffset = Core.Me.Heading;
+                f.Radius = 3;
+                f.Color = Color.FromArgb(0x70, 0x70, 0, 0);
+                f.PointColor = Color.FromArgb(0x70, 0x70, 0x70, 0);
+
+                customPoints.AddDrawItem(f);
+            }
+
+            if (e.Key == Keys.I && e.Modifiers == (KeyModifiers.Shift | KeyModifiers.Alt))
+            {
+                customPoints = new ComplexDrawCommand();
+            }
+        }
 
         private void RunRenderForm()
         {
@@ -100,6 +144,9 @@ namespace FFXIVOverlay
 
         private async Task OnDisableAsync()
         {
+            HotKeyManager.UnregisterHotKey(_hotkeyId1);
+            HotKeyManager.UnregisterHotKey(_hotkeyId2);
+
             OverlayManager.Drawing -= Drawing;
 
             this.resetDrawing();
@@ -118,20 +165,20 @@ namespace FFXIVOverlay
             loadConfig(configPath);
         }
 
-        private void DrawCircleAttack(DrawingContext ctx, GameObject obj)
-        {
-            ctx.DrawCircleWithPoint(obj.Location, obj.Heading, 11.0f, Color.FromArgb(100, Color.Red), Color.FromArgb(100, Color.Red));
-        }
+        //private void DrawCircleAttack(DrawingContext ctx, GameObject obj)
+        //{
+        //    ctx.DrawCircleWithPoint(obj.Location, obj.Heading, 11.0f, Color.FromArgb(100, Color.Red), Color.FromArgb(100, Color.Red));
+        //}
 
-        private void DrawSideAttack(DrawingContext ctx, GameObject obj)
-        {
-            ctx.DrawSideAttackAgroLine(obj.Location, obj.Heading, 5.0f, 50.0f, Color.FromArgb(100, Color.Blue));
-        }
+        //private void DrawSideAttack(DrawingContext ctx, GameObject obj)
+        //{
+        //    ctx.DrawSideAttackAgroLine(obj.Location, obj.Heading, 5.0f, 50.0f, Color.FromArgb(100, Color.Blue));
+        //}
 
-        private void DrawSliceAttack(DrawingContext ctx, GameObject obj)
-        {
-            ctx.DrawAgroLine(obj.Location, obj.Heading + (float)Math.PI / 2, 5.0f, 100.0f, Color.FromArgb(100, Color.Yellow), Color.FromArgb(100, Color.Yellow));
-        }
+        //private void DrawSliceAttack(DrawingContext ctx, GameObject obj)
+        //{
+        //    ctx.DrawAgroLine(obj.Location, obj.Heading + (float)Math.PI / 2, 5.0f, 100.0f, Color.FromArgb(100, Color.Yellow), Color.FromArgb(100, Color.Yellow));
+        //}
 
         private void Drawing(DrawingContext ctx)
         {
@@ -206,6 +253,10 @@ namespace FFXIVOverlay
             {
                 g.Drawing(ctx, null);
             }
+
+            customPoints.Drawing(ctx, null);
+
+            cacheDrawManager.Draw(ctx);
         }
 
 
@@ -222,7 +273,7 @@ namespace FFXIVOverlay
 
             if (!parser.parse(configPath))
             {
-                Logging.Write(Colors.Red, string.Format("[{0}] Config error. Can't parse."));
+                Logging.Write(Colors.Red, string.Format("[{0}] Config error. Can't parse.", configPath));
                 return;
             }
 
@@ -265,16 +316,20 @@ namespace FFXIVOverlay
             switch(cmdName)
             {
                 case "self":
-                    fillComplexDrawCommand(ref SelfDrawing, cmd);
+                    SelfDrawing.Init(cmd);
+                    //fillComplexDrawCommand(ref SelfDrawing, cmd);
                     return;
                 case "target":
-                    fillComplexDrawCommand(ref TargetDrawing, cmd);
+                    TargetDrawing.Init(cmd);
+                    //fillComplexDrawCommand(ref TargetDrawing, cmd);
                     return;
                 case "hostile":
-                    fillComplexDrawCommand(ref HostileDrawing, cmd);
+                    HostileDrawing.Init(cmd);
+                    //fillComplexDrawCommand(ref HostileDrawing, cmd);
                     return;
                 case "all":
-                    fillComplexDrawCommand(ref AllDrawing, cmd);
+                    AllDrawing.Init(cmd);
+                    //fillComplexDrawCommand(ref AllDrawing, cmd);
                     return;
                 case "gametype":
                     fillGameTypeCommand(cmd);
@@ -283,31 +338,36 @@ namespace FFXIVOverlay
                     fillNpcCommand(cmd);
                     return;
                 case "gather":
-                    fillGatherMap(cmd);
+                    GatherNode gather = CommandDrawingFactoryEx.create(cmd) as GatherNode;
+                    if (gather != null)
+                    {
+                        GatherNodes.Add(gather);
+                    }
+                    //fillGatherMap(cmd);
                     return;
             }
 
         }
 
-        public void fillComplexDrawCommand(ref ComplexDrawCommand complex, YamLikeConfig.Command cmd)
-        {
-            if (cmd.SubCommand == null || cmd.SubCommand.Count == 0)
-                return;
+        //public void fillComplexDrawCommand(ref ComplexDrawCommand complex, YamLikeConfig.Command cmd)
+        //{
+        //    if (cmd.SubCommand == null || cmd.SubCommand.Count == 0)
+        //        return;
 
-            foreach(var c in cmd.SubCommand)
-            {
-                IDrawCommand drawingCmd = CommandDrawingFactory.create(c);
-                if (drawingCmd == null)
-                    continue;
+        //    foreach(var c in cmd.SubCommand)
+        //    {
+        //        IDrawCommand drawingCmd = CommandDrawingFactory.create(c);
+        //        if (drawingCmd == null)
+        //            continue;
 
-                if (complex == null)
-                {
-                    complex = new ComplexDrawCommand();
-                }
+        //        if (complex == null)
+        //        {
+        //            complex = new ComplexDrawCommand();
+        //        }
 
-                complex.AddDrawItem(drawingCmd);
-            }
-        }
+        //        complex.AddDrawItem(drawingCmd);
+        //    }
+        //}
         public void fillGameTypeCommand(YamLikeConfig.Command gameTypeCommand)
         {
             uint gameTypeInt = 0;
@@ -330,7 +390,7 @@ namespace FFXIVOverlay
 
             foreach (var c in gameTypeCommand.SubCommand)
             {
-                IDrawCommand drawingCmd = CommandDrawingFactory.create(c);
+                IDrawCommand drawingCmd = CommandDrawingFactoryEx.create(c);
                 if (drawingCmd == null)
                     continue;
 
@@ -380,7 +440,7 @@ namespace FFXIVOverlay
             {
                 foreach (var c in npcCommand.SubCommand)
                 {
-                    IDrawCommand drawingCmd = CommandDrawingFactory.create(c);
+                    IDrawCommand drawingCmd = CommandDrawingFactoryEx.create(c);
                     if (drawingCmd == null)
                         continue;
 
@@ -399,43 +459,43 @@ namespace FFXIVOverlay
             }
         }
 
-        public void fillGatherMap(YamLikeConfig.Command docCmd)
-        {
-            if (docCmd.SubCommand == null || docCmd.SubCommand.Count == 0)
-            {
-                return;
-            }
+        //public void fillGatherMap(YamLikeConfig.Command docCmd)
+        //{
+        //    if (docCmd.SubCommand == null || docCmd.SubCommand.Count == 0)
+        //    {
+        //        return;
+        //    }
 
-            if (!docCmd.has("zone"))
-                return;
+        //    if (!docCmd.has("zone"))
+        //        return;
 
-            int mapId = 0;
-            if (!docCmd.tryGet("zone", out mapId))
-            {
-                return;
-            }
+        //    int mapId = 0;
+        //    if (!docCmd.tryGet("zone", out mapId))
+        //    {
+        //        return;
+        //    }
 
-            GatherNode node = new GatherNode();
-            node.zoneId = mapId;
+        //    GatherNode node = new GatherNode();
+        //    node.zoneId = mapId;
 
-            foreach (var c in docCmd.SubCommand)
-            {
-                IDrawCommand drawingCmd = CommandDrawingFactory.create(c);
-                if (drawingCmd == null)
-                    continue;
+        //    foreach (var c in docCmd.SubCommand)
+        //    {
+        //        IDrawCommand drawingCmd = CommandDrawingFactory.create(c);
+        //        if (drawingCmd == null)
+        //            continue;
 
-                node.AddDrawItem(drawingCmd);
-            }
+        //        node.AddDrawItem(drawingCmd);
+        //    }
 
-            this.GatherNodes.Add(node);
-        }
+        //    this.GatherNodes.Add(node);
+        //}
 
         void resetDrawing()
         {
-            this.SelfDrawing = null;
-            this.TargetDrawing = null;
-            this.AllDrawing = null;
-            this.HostileDrawing = null;
+            this.SelfDrawing = new ComplexDrawCommand();
+            this.TargetDrawing = new ComplexDrawCommand();
+            this.AllDrawing = new ComplexDrawCommand();
+            this.HostileDrawing = new ComplexDrawCommand();
 
             this.skipObjects = new HashSet<uint>();
             this.skipGameType = new HashSet<ff14bot.Enums.GameObjectType>();
@@ -443,6 +503,9 @@ namespace FFXIVOverlay
             this.CustomObjectTypesDrawing = new Dictionary<ff14bot.Enums.GameObjectType, ComplexDrawCommand>();
             this.NpcDrawing = new Dictionary<uint, ComplexDrawCommand>();
             this.GatherNodes = new List<GatherNode>();
+            this.cacheDrawManager = new DrawCacheManager();
+
+            CommandDrawingFactoryEx.drawCacheManager = this.cacheDrawManager;
         }
 
     }

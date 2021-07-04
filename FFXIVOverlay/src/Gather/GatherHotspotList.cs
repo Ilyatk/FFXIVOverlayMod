@@ -1,28 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Clio.Utilities;
+﻿using System.Linq;
 
 using ff14bot.Objects;
 using DrawingContext = FFXIVOverlay.Overlay.DrawingContext;
 using Vector3 = SlimDX.Vector3;
+using YamLikeCommand = YamLikeConfig.Command;
 
 namespace FFXIVOverlay.Command
 {
-    public class GatherHotspotList : ComplexDrawCommand
+    public class GatherHotspotList : ComplexDrawCommand, IDrawCommandCreator
     {
         public System.Drawing.Color Color = System.Drawing.Color.FromArgb(0xE0, 0x00, 0xD0, 0xD0);
 
-        public GatherHotspotList()
+        public GatherHotspotList() : base()
         {
 
         }
 
         public override void Drawing(DrawingContext ctx, GameObject obj)
         {
-            Vector3[] points = this.Commands.Where(p => ((p as GatherHotspot) != null)).Select(p => (p as GatherHotspot).XYZ).ToArray();
+            Vector3[] points = this.Commands
+                .Where(p => ((p as GatherHotspot) != null))
+                .Select(p => (p as GatherHotspot).Center).ToArray();
 
             if (points != null && points.Length > 1)
             {
@@ -40,6 +38,16 @@ namespace FFXIVOverlay.Command
             }
 
             base.Drawing(ctx, obj);
+        }
+
+        public override bool Init(YamLikeCommand cmd)
+        {
+            if (cmd.has("color"))
+            {
+                this.Color = cmd["color"].ParseColor(this.Color);
+            }
+
+            return base.Init(cmd);
         }
     }
 }

@@ -83,20 +83,29 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\Command\CircleAttack.cs" />
-    <Compile Include="src\Command\CommandDrawingFactory.cs" />
-    <Compile Include="src\Command\GatherHotspot.cs" />
-    <Compile Include="src\Command\GatherHotspotList.cs" />
-    <Compile Include="src\Command\GatherNode.cs" />
-    <Compile Include="src\Command\IDrawCommand.cs" />
+    <Compile Include="src\Command\PathShadow.cs" />
+    <Compile Include="src\DrawBase\CommandDrawingFactory.cs" />
+    <Compile Include="src\DrawBase\DefaultColors.cs" />
+    <Compile Include="src\Command\Donut.cs" />
+    <Compile Include="src\Cache\DrawCacheCommand.cs" />
+    <Compile Include="src\Cache\DrawCacheManager.cs" />
+    <Compile Include="src\DrawBase\DrawItemBase.cs" />
+    <Compile Include="src\Gather\GatherHotspot.cs" />
+    <Compile Include="src\Gather\GatherHotspotList.cs" />
+    <Compile Include="src\Gather\GatherNode.cs" />
+    <Compile Include="src\DrawBase\ICacheDrawItem.cs" />
+    <Compile Include="src\DrawBase\IDrawCommand.cs" />
     <Compile Include="src\Command\LineAttack.cs" />
     <Compile Include="src\Command\OutLineBox.cs" />
+    <Compile Include="src\Command\Sector.cs" />
     <Compile Include="src\Command\SideAttack.cs" />
-    <Compile Include="src\Command\SpellFilter.cs" />
+    <Compile Include="src\Filter\SpellFilter.cs" />
     <Compile Include="src\Command\Title.cs" />
     <Compile Include="src\DebugLog.cs" />
     <Compile Include="src\EatFoodEx.cs" />
     <Compile Include="src\Extensions.cs" />
     <Compile Include="src\FFXIVCameraEx.cs" />
+    <Compile Include="src\HotkeyManager.cs" />
     <Compile Include="src\Overlay\DrawingContext.cs" />
     <Compile Include="src\Overlay\Imports.cs" />
     <Compile Include="src\Overlay\OverlayManager.cs" />
@@ -112,5 +121,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
