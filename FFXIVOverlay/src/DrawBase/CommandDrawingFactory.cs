@@ -124,6 +124,7 @@ namespace FFXIVOverlay.Command
             });
 
             factory.Reg<PathShadow>("path");
+            factory.Reg<GeneralFilter>("filter");
         }
     }
 }

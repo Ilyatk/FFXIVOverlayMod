@@ -21,6 +21,7 @@ using FFXIVOverlay.Command;
 using System.Collections.Generic;
 using System.Threading;
 using ff14bot.Enums;
+using SlimDX.Direct3D9;
 
 namespace FFXIVOverlay
 {
@@ -72,6 +73,18 @@ namespace FFXIVOverlay
             if (rivaTunerRunning)
             {
                 Logging.Write(Colors.Red, @"Rivatuner has been detected running on this machine. If rebornbuddy crashes, add rebornbuddy.exe to rivatuner and disable ""On-Screen Display support""");
+            }
+
+            try
+            {
+                // Check that we can create DirectX 9.0 Object.
+                using(var d3d = new Direct3D())
+                {
+                }
+            } 
+            catch(Exception ex)
+            {
+                Logging.Write(Colors.Red, @"DirectX 9.0 problem:\n {0}", ex);
             }
         }
 

@@ -90,6 +90,7 @@
     <Compile Include="src\Cache\DrawCacheCommand.cs" />
     <Compile Include="src\Cache\DrawCacheManager.cs" />
     <Compile Include="src\DrawBase\DrawItemBase.cs" />
+    <Compile Include="src\Filter\GeneralFilter.cs" />
     <Compile Include="src\Gather\GatherHotspot.cs" />
     <Compile Include="src\Gather\GatherHotspotList.cs" />
     <Compile Include="src\Gather\GatherNode.cs" />

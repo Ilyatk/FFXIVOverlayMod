@@ -13,7 +13,6 @@ namespace FFXIVOverlay.Command
         public SpellFilter()
             : base()
         {
-            Commands = new List<IDrawCommand>();
             spells = new HashSet<uint>();
         }
 
