@@ -35,36 +35,15 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Clio.Localization">
-      <HintPath>depends\Clio.Localization.dll</HintPath>
-    </Reference>
     <Reference Include="GreyMagic">
-      <HintPath>depends\GreyMagic.dll</HintPath>
-    </Reference>
-    <Reference Include="IronPython">
-      <HintPath>depends\IronPython.dll</HintPath>
-    </Reference>
-    <Reference Include="IronPython.Modules">
-      <HintPath>depends\IronPython.Modules.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
-      <HintPath>depends\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Dynamic">
-      <HintPath>depends\Microsoft.Dynamic.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Scripting">
-      <HintPath>depends\Microsoft.Scripting.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Scripting.Metadata">
-      <HintPath>depends\Microsoft.Scripting.Metadata.dll</HintPath>
+      <HintPath>..\deps\GreyMagic.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="RebornBuddy">
-      <HintPath>depends\RebornBuddy.exe</HintPath>
+      <HintPath>..\deps\RebornBuddy.exe</HintPath>
     </Reference>
     <Reference Include="SlimDX">
-      <HintPath>depends\SlimDX.dll</HintPath>
+      <HintPath>..\deps\SlimDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -91,6 +70,8 @@
     <Compile Include="src\Cache\DrawCacheManager.cs" />
     <Compile Include="src\DrawBase\DrawItemBase.cs" />
     <Compile Include="src\Filter\GeneralFilter.cs" />
+    <Compile Include="src\Gather\ApproachGatherSpot.cs" />
+    <Compile Include="src\Gather\ApproachGatherSpotList.cs" />
     <Compile Include="src\Gather\GatherHotspot.cs" />
     <Compile Include="src\Gather\GatherHotspotList.cs" />
     <Compile Include="src\Gather\GatherNode.cs" />

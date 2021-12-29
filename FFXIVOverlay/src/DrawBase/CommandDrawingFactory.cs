@@ -87,6 +87,10 @@ namespace FFXIVOverlay.Command
 
             factory.Reg<GatherNode>("gather");
 
+
+            factory.Reg<ApproachGatherSpotList>("Approach");
+            factory.Reg<ApproachGatherSpot>("<IndirectApproachGatherSpot");
+
             //factory.Reg("gather", (cmd) =>
             //{
             //    GatherNode n = new GatherNode();

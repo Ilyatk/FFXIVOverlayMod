@@ -34,7 +34,7 @@ namespace FFXIVOverlay.Overlay
 
         private VertexDeclaration _coloredVertexDecl;
         private ColoredVertex[] _vertexBuffer = new ColoredVertex[1000];
-        private readonly int[] _indexBuffer = new int[1000];
+        private int[] _indexBuffer = new int[1000];
 
         private static readonly ushort[] s_boxIndices =
 {
@@ -604,6 +604,126 @@ namespace FFXIVOverlay.Overlay
                 s_boxIndices,
                 Format.Index16, _vertexBuffer, 16);
         }
+
+
+        public void DrawIndexedTriangles(List<Clio.Utilities.Vector3> verts, List<int> stuff, Color color)
+        {
+            if (verts.Count == 0)
+                return;
+
+            if (verts.Count > _vertexBuffer.Length)
+                Array.Resize(ref _vertexBuffer, verts.Count);
+
+            if (stuff.Count > _indexBuffer.Length)
+                Array.Resize(ref _indexBuffer, stuff.Count);
+
+
+            if (verts.Count > 10000)
+            {
+                Parallel.For(0, verts.Count, i => _vertexBuffer[i] = new ColoredVertex(verts[i].Convert(), color));
+            }
+            else
+            {
+                for (int i = 0; i < verts.Count; i++)
+                    _vertexBuffer[i] = new ColoredVertex(verts[i].Convert(), color);
+            }
+
+            for (int i = 0; i < stuff.Count; i++)
+                _indexBuffer[i] = stuff[i];
+
+            Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, verts.Count, 0, verts.Count / 3);
+        }
+
+        static void FixBounds(ref Clio.Utilities.Vector3 bmin, ref Clio.Utilities.Vector3 bmax)
+        {
+            float minX = Math.Min(bmin.X, bmax.X);
+            float minY = Math.Min(bmin.Y, bmax.Y);
+            float minZ = Math.Min(bmin.Z, bmax.Z);
+
+            float maxX = Math.Max(bmin.X, bmax.X);
+            float maxY = Math.Max(bmin.Y, bmax.Y);
+            float maxZ = Math.Max(bmin.Z, bmax.Z);
+
+            bmin.X = minX;
+            bmin.Y = minY;
+            bmin.Z = minZ;
+
+            bmax.X = maxX;
+            bmax.Y = maxY;
+            bmax.Z = maxZ;
+        }
+
+
+        public void DrawBoundingBox(Clio.Utilities.Vector3 minn, Clio.Utilities.Vector3 maxx, Color color)
+        {
+
+            FixBounds(ref minn, ref maxx);
+
+            Clio.Utilities.Vector3 boxCenter = (minn + maxx) * 0.5f;
+            Clio.Utilities.Vector3 boxExtents = (maxx - minn) * 0.5f;
+            var min = boxCenter - boxExtents;
+            var max = boxCenter + boxExtents;
+
+            _vertexBuffer[0] = new ColoredVertex(new Vector3(min.X, max.Y, max.Z), color);
+            _vertexBuffer[1] = new ColoredVertex(new Vector3(max.X, max.Y, max.Z), color);
+            _vertexBuffer[2] = new ColoredVertex(new Vector3(max.X, min.Y, max.Z), color);
+            _vertexBuffer[3] = new ColoredVertex(new Vector3(min.X, min.Y, max.Z), color);
+            _vertexBuffer[4] = new ColoredVertex(new Vector3(min.X, max.Y, min.Z), color);
+            _vertexBuffer[5] = new ColoredVertex(new Vector3(max.X, max.Y, min.Z), color);
+            _vertexBuffer[6] = new ColoredVertex(new Vector3(max.X, min.Y, min.Z), color);
+            _vertexBuffer[7] = new ColoredVertex(new Vector3(min.X, min.Y, min.Z), color);
+
+            SetDeclaration();
+            Device.DrawIndexedUserPrimitives(PrimitiveType.LineList, 0, 8, 12, s_boxOutlineIndices, Format.Index16, _vertexBuffer, 16);
+        }
+
+        public void DrawLineList(List<Clio.Utilities.Vector3> verts, int count, Color color)
+        {
+
+            if (verts.Count == 0)
+                return;
+
+            if (verts.Count > _vertexBuffer.Length)
+                Array.Resize(ref _vertexBuffer, verts.Count);
+
+            if (verts.Count > 10000)
+            {
+                Parallel.For(0, verts.Count, i => _vertexBuffer[i] = new ColoredVertex(verts[i].Convert(), color));
+            }
+            else
+            {
+                for (int i = 0; i < verts.Count; i++)
+                    _vertexBuffer[i] = new ColoredVertex(verts[i].Convert(), color);
+            }
+
+            SetDeclaration();
+            Device.DrawUserPrimitives(PrimitiveType.LineList, count, _vertexBuffer);
+        }
+
+        public void DrawLineStrip(List<Clio.Utilities.Vector3> verts, int count, Color color)
+        {
+
+            if (verts.Count == 0)
+                return;
+
+            if (verts.Count > _vertexBuffer.Length)
+                Array.Resize(ref _vertexBuffer, verts.Count);
+
+            if (verts.Count > 10000)
+            {
+                Parallel.For(0, verts.Count, i => _vertexBuffer[i] = new ColoredVertex(verts[i].Convert(), color));
+            }
+            else
+            {
+                for (int i = 0; i < verts.Count; i++)
+                    _vertexBuffer[i] = new ColoredVertex(verts[i].Convert(), color);
+            }
+
+            SetDeclaration();
+
+            Device.DrawUserPrimitives(PrimitiveType.LineStrip, count, _vertexBuffer);
+        }
+
 
         [StructLayout(LayoutKind.Sequential)]
         public unsafe struct ColoredVertex
